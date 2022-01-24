@@ -44,8 +44,6 @@ class ObjectStore {
             for (const rawIndexValue of objectStore.indexes.values) {
                 this.rawIndexes.set(objectStore.indexes.keys[i], rawIndexValue);
             }
-            console.log("records:", this.records);
-            console.log("rawIndexes:", this.rawIndexes);
         } else {
             this.saveObjectStore();
         }

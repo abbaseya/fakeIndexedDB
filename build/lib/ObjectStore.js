@@ -68,8 +68,6 @@ var ObjectStore = /** @class */ (function() {
                     if (e_1) throw e_1.error;
                 }
             }
-            console.log("records:", this.records);
-            console.log("rawIndexes:", this.rawIndexes);
         } else {
             this.saveObjectStore();
         }
