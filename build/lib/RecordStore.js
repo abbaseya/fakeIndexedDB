@@ -1,19 +1,56 @@
 "use strict";
+var __values =
+    (this && this.__values) ||
+    function(o) {
+        var s = typeof Symbol === "function" && Symbol.iterator,
+            m = s && o[s],
+            i = 0;
+        if (m) return m.call(o);
+        if (o && typeof o.length === "number")
+            return {
+                next: function() {
+                    if (o && i >= o.length) o = void 0;
+                    return { value: o && o[i++], done: !o };
+                },
+            };
+        throw new TypeError(
+            s ? "Object is not iterable." : "Symbol.iterator is not defined.",
+        );
+    };
 Object.defineProperty(exports, "__esModule", { value: true });
-var fs = require("fs");
 var FDBKeyRange_1 = require("../FDBKeyRange");
 var binarySearch_1 = require("./binarySearch");
 var cmp_1 = require("./cmp");
 var RecordStore = /** @class */ (function() {
-    function RecordStore() {
+    function RecordStore(initRecords) {
+        var e_1, _a;
+        if (initRecords === void 0) {
+            initRecords = [];
+        }
         this.records = [];
-        this.tempDatabase = "/tmp/fakeIndexedDB";
-        if (fs.existsSync(this.tempDatabase)) {
-            this.records = JSON.parse(
-                fs.readFileSync(this.tempDatabase, "utf8").toString(),
-            );
-        } else {
-            fs.writeFileSync(this.tempDatabase, "[]");
+        try {
+            for (
+                var initRecords_1 = __values(initRecords),
+                    initRecords_1_1 = initRecords_1.next();
+                !initRecords_1_1.done;
+                initRecords_1_1 = initRecords_1.next()
+            ) {
+                var record = initRecords_1_1.value;
+                this.add(record);
+            }
+        } catch (e_1_1) {
+            e_1 = { error: e_1_1 };
+        } finally {
+            try {
+                if (
+                    initRecords_1_1 &&
+                    !initRecords_1_1.done &&
+                    (_a = initRecords_1.return)
+                )
+                    _a.call(initRecords_1);
+            } finally {
+                if (e_1) throw e_1.error;
+            }
         }
     }
     RecordStore.prototype.get = function(key) {
@@ -52,7 +89,6 @@ var RecordStore = /** @class */ (function() {
             }
         }
         this.records.splice(i, 0, newRecord);
-        this.saveRecords();
     };
     RecordStore.prototype.delete = function(key) {
         var deletedRecords = [];
@@ -67,7 +103,6 @@ var RecordStore = /** @class */ (function() {
             deletedRecords.push(this.records[idx]);
             this.records.splice(idx, 1);
         }
-        this.saveRecords();
         return deletedRecords;
     };
     RecordStore.prototype.deleteByValue = function(key) {
@@ -83,13 +118,11 @@ var RecordStore = /** @class */ (function() {
             }
             return !shouldDelete;
         });
-        this.saveRecords();
         return deletedRecords;
     };
     RecordStore.prototype.clear = function() {
         var deletedRecords = this.records.slice();
         this.records = [];
-        this.saveRecords();
         return deletedRecords;
     };
     RecordStore.prototype.values = function(range, direction) {
@@ -196,8 +229,15 @@ var RecordStore = /** @class */ (function() {
             _a
         );
     };
-    RecordStore.prototype.saveRecords = function() {
-        fs.writeFileSync(this.tempDatabase, JSON.stringify(this.records));
+    RecordStore.prototype.getRecords = function() {
+        return this.records.map(function(record) {
+            return { key: record.key, value: record.value };
+        });
+    };
+    RecordStore.prototype.getKeys = function() {
+        return this.records.map(function(record) {
+            return record.key;
+        });
     };
     return RecordStore;
 })();

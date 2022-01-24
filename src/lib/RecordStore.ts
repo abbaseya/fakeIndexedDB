@@ -1,4 +1,3 @@
-import * as fs from "fs";
 import FDBKeyRange from "../FDBKeyRange";
 import {
     getByKey,
@@ -12,15 +11,10 @@ import { Key, Record } from "./types";
 
 class RecordStore {
     private records: Record[] = [];
-    private tempDatabase = "/tmp/fakeIndexedDB";
 
-    constructor() {
-        if (fs.existsSync(this.tempDatabase)) {
-            this.records = JSON.parse(
-                fs.readFileSync(this.tempDatabase, "utf8").toString(),
-            );
-        } else {
-            fs.writeFileSync(this.tempDatabase, "[]");
+    constructor(initRecords: any[] = []) {
+        for (const record of initRecords) {
+            this.add(<Record>record);
         }
     }
 
@@ -60,7 +54,6 @@ class RecordStore {
         }
 
         this.records.splice(i, 0, newRecord);
-        this.saveRecords();
     }
 
     public delete(key: Key) {
@@ -77,7 +70,6 @@ class RecordStore {
             deletedRecords.push(this.records[idx]);
             this.records.splice(idx, 1);
         }
-        this.saveRecords();
         return deletedRecords;
     }
 
@@ -95,14 +87,13 @@ class RecordStore {
 
             return !shouldDelete;
         });
-        this.saveRecords();
+
         return deletedRecords;
     }
 
     public clear() {
         const deletedRecords = this.records.slice();
         this.records = [];
-        this.saveRecords();
         return deletedRecords;
     }
 
@@ -202,8 +193,15 @@ class RecordStore {
         };
     }
 
-    private saveRecords(): void {
-        fs.writeFileSync(this.tempDatabase, JSON.stringify(this.records));
+    public getRecords(): any[] {
+        return this.records.map(record => ({
+            key: record.key,
+            value: record.value,
+        }));
+    }
+
+    public getKeys(): string[] {
+        return this.records.map(record => record.key);
     }
 }
 

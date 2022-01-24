@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import FDBKeyRange from "../FDBKeyRange";
 import Database from "./Database";
 import { ConstraintError, DataError } from "./errors";
@@ -18,6 +19,7 @@ class ObjectStore {
     public readonly keyPath: KeyPath | null;
     public readonly autoIncrement: boolean;
     public readonly keyGenerator: KeyGenerator | null;
+    private tempDatabase = "/tmp/fakeIndexedDB";
 
     constructor(
         rawDatabase: Database,
@@ -32,6 +34,19 @@ class ObjectStore {
         this.name = name;
         this.keyPath = keyPath;
         this.autoIncrement = autoIncrement;
+        if (fs.existsSync(this.tempDatabase)) {
+            const objectStore = JSON.parse(
+                fs.readFileSync(this.tempDatabase, "utf8").toString(),
+            );
+            this.name = objectStore.name;
+            this.records = new RecordStore(objectStore.records);
+            var i = 0;
+            for (const rawIndexValue of objectStore.indexes.values) {
+                this.rawIndexes.set(objectStore.indexes.keys[i], rawIndexValue);
+            }
+        } else {
+            this.saveObjectStore();
+        }
     }
 
     // http://www.w3.org/TR/2015/REC-IndexedDB-20150108/#dfn-steps-for-retrieving-a-value-from-an-object-store
@@ -172,6 +187,8 @@ class ObjectStore {
             }
         }
 
+        this.saveObjectStore();
+
         return newRecord.key;
     }
 
@@ -207,6 +224,20 @@ class ObjectStore {
         for (const rawIndex of this.rawIndexes.values()) {
             rawIndex.records.clear();
         }
+    }
+
+    private saveObjectStore(): void {
+        fs.writeFileSync(
+            this.tempDatabase,
+            JSON.stringify({
+                name: this.name,
+                records: this.records.getRecords(),
+                indexes: {
+                    keys: this.rawIndexes.keys(),
+                    values: this.records.getKeys(),
+                },
+            }),
+        );
     }
 }
 
