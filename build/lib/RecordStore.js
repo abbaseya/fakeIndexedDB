@@ -21,6 +21,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var FDBKeyRange_1 = require("../FDBKeyRange");
 var binarySearch_1 = require("./binarySearch");
 var cmp_1 = require("./cmp");
+var extractKey_1 = require("./extractKey");
 var RecordStore = /** @class */ (function() {
     function RecordStore(initRecords) {
         var e_1, _a;
@@ -231,7 +232,15 @@ var RecordStore = /** @class */ (function() {
     };
     RecordStore.prototype.getRecords = function() {
         return this.records.map(function(record) {
-            return { key: record.key, value: record.value };
+            return {
+                key: record.key,
+                value: record.value,
+            };
+        });
+    };
+    RecordStore.prototype.getIndexKeys = function(keyPath) {
+        return this.records.map(function(record) {
+            return keyPath ? extractKey_1.default(keyPath, record.value) : null;
         });
     };
     RecordStore.prototype.getKeys = function() {

@@ -7,7 +7,8 @@ import {
     getIndexByKeyRange,
 } from "./binarySearch";
 import cmp from "./cmp";
-import { Key, Record } from "./types";
+import { Key, KeyPath, Record } from "./types";
+import extractKey from "./extractKey";
 
 class RecordStore {
     private records: Record[] = [];
@@ -198,6 +199,12 @@ class RecordStore {
             key: record.key,
             value: record.value,
         }));
+    }
+
+    public getIndexKeys(keyPath: KeyPath | null): string[] {
+        return this.records.map(record =>
+            keyPath ? extractKey(keyPath, record.value) : null,
+        );
     }
 
     public getKeys(): string[] {

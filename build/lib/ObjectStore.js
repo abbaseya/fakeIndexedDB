@@ -68,6 +68,8 @@ var ObjectStore = /** @class */ (function() {
                     if (e_1) throw e_1.error;
                 }
             }
+            console.log("records:", this.records);
+            console.log("rawIndexes:", this.rawIndexes);
         } else {
             this.saveObjectStore();
         }
@@ -359,7 +361,7 @@ var ObjectStore = /** @class */ (function() {
                 name: this.name,
                 records: this.records.getRecords(),
                 indexes: {
-                    keys: this.rawIndexes.keys(),
+                    keys: this.records.getIndexKeys(this.keyPath),
                     values: this.records.getKeys(),
                 },
             }),
