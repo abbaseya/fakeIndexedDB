@@ -1,20 +1,13 @@
-import * as fs from "fs";
-import FDBKeyRange from "../FDBKeyRange";
-import {
-    getByKey,
-    getByKeyRange,
-    getIndexByKey,
-    getIndexByKeyGTE,
-    getIndexByKeyRange,
-} from "./binarySearch";
-import cmp from "./cmp";
-import { Key, Record } from "./types";
-
-class RecordStore {
-    private records: Record[] = [];
-    private tempDatabase = "/tmp/fakeIndexedDB";
-
-    constructor() {
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+var fs = require("fs");
+var FDBKeyRange_1 = require("../FDBKeyRange");
+var binarySearch_1 = require("./binarySearch");
+var cmp_1 = require("./cmp");
+var RecordStore = /** @class */ (function() {
+    function RecordStore() {
+        this.records = [];
+        this.tempDatabase = "/tmp/fakeIndexedDB";
         if (fs.existsSync(this.tempDatabase)) {
             this.records = JSON.parse(
                 fs.readFileSync(this.tempDatabase, "utf8").toString(),
@@ -23,23 +16,19 @@ class RecordStore {
             fs.writeFileSync(this.tempDatabase, "[]");
         }
     }
-
-    public get(key: Key | FDBKeyRange) {
-        if (key instanceof FDBKeyRange) {
-            return getByKeyRange(this.records, key);
+    RecordStore.prototype.get = function(key) {
+        if (key instanceof FDBKeyRange_1.default) {
+            return binarySearch_1.getByKeyRange(this.records, key);
         }
-
-        return getByKey(this.records, key);
-    }
-
-    public add(newRecord: Record) {
+        return binarySearch_1.getByKey(this.records, key);
+    };
+    RecordStore.prototype.add = function(newRecord) {
         // Find where to put it so it's sorted by key
-        let i;
+        var i;
         if (this.records.length === 0) {
             i = 0;
         } else {
-            i = getIndexByKeyGTE(this.records, newRecord.key);
-
+            i = binarySearch_1.getIndexByKeyGTE(this.records, newRecord.key);
             if (i === -1) {
                 // If no matching key, add to end
                 i = this.records.length;
@@ -47,30 +36,31 @@ class RecordStore {
                 // If matching key, advance to appropriate position based on value (used in indexes)
                 while (
                     i < this.records.length &&
-                    cmp(this.records[i].key, newRecord.key) === 0
+                    cmp_1.default(this.records[i].key, newRecord.key) === 0
                 ) {
-                    if (cmp(this.records[i].value, newRecord.value) !== -1) {
+                    if (
+                        cmp_1.default(
+                            this.records[i].value,
+                            newRecord.value,
+                        ) !== -1
+                    ) {
                         // Record value >= newRecord value, so insert here
                         break;
                     }
-
                     i += 1; // Look at next record
                 }
             }
         }
-
         this.records.splice(i, 0, newRecord);
         this.saveRecords();
-    }
-
-    public delete(key: Key) {
-        const deletedRecords: Record[] = [];
-
-        const isRange = key instanceof FDBKeyRange;
+    };
+    RecordStore.prototype.delete = function(key) {
+        var deletedRecords = [];
+        var isRange = key instanceof FDBKeyRange_1.default;
         while (true) {
-            const idx = isRange
-                ? getIndexByKeyRange(this.records, key)
-                : getIndexByKey(this.records, key);
+            var idx = isRange
+                ? binarySearch_1.getIndexByKeyRange(this.records, key)
+                : binarySearch_1.getIndexByKey(this.records, key);
             if (idx === -1) {
                 break;
             }
@@ -79,43 +69,45 @@ class RecordStore {
         }
         this.saveRecords();
         return deletedRecords;
-    }
-
-    public deleteByValue(key: Key) {
-        const range = key instanceof FDBKeyRange ? key : FDBKeyRange.only(key);
-
-        const deletedRecords: Record[] = [];
-
-        this.records = this.records.filter(record => {
-            const shouldDelete = range.includes(record.value);
-
+    };
+    RecordStore.prototype.deleteByValue = function(key) {
+        var range =
+            key instanceof FDBKeyRange_1.default
+                ? key
+                : FDBKeyRange_1.default.only(key);
+        var deletedRecords = [];
+        this.records = this.records.filter(function(record) {
+            var shouldDelete = range.includes(record.value);
             if (shouldDelete) {
                 deletedRecords.push(record);
             }
-
             return !shouldDelete;
         });
         this.saveRecords();
         return deletedRecords;
-    }
-
-    public clear() {
-        const deletedRecords = this.records.slice();
+    };
+    RecordStore.prototype.clear = function() {
+        var deletedRecords = this.records.slice();
         this.records = [];
         this.saveRecords();
         return deletedRecords;
-    }
-
-    public values(range?: FDBKeyRange, direction: "next" | "prev" = "next") {
-        return {
-            [Symbol.iterator]: () => {
-                let i: number;
+    };
+    RecordStore.prototype.values = function(range, direction) {
+        var _a;
+        var _this = this;
+        if (direction === void 0) {
+            direction = "next";
+        }
+        return (
+            (_a = {}),
+            (_a[Symbol.iterator] = function() {
+                var i;
                 if (direction === "next") {
                     i = 0;
                     if (range !== undefined && range.lower !== undefined) {
-                        while (this.records[i] !== undefined) {
-                            const cmpResult = cmp(
-                                this.records[i].key,
+                        while (_this.records[i] !== undefined) {
+                            var cmpResult = cmp_1.default(
+                                _this.records[i].key,
                                 range.lower,
                             );
                             if (
@@ -128,11 +120,11 @@ class RecordStore {
                         }
                     }
                 } else {
-                    i = this.records.length - 1;
+                    i = _this.records.length - 1;
                     if (range !== undefined && range.upper !== undefined) {
-                        while (this.records[i] !== undefined) {
-                            const cmpResult = cmp(
-                                this.records[i].key,
+                        while (_this.records[i] !== undefined) {
+                            var cmpResult = cmp_1.default(
+                                _this.records[i].key,
                                 range.upper,
                             );
                             if (
@@ -145,22 +137,23 @@ class RecordStore {
                         }
                     }
                 }
-
                 return {
-                    next: () => {
-                        let done;
-                        let value;
+                    next: function() {
+                        var done;
+                        var value;
                         if (direction === "next") {
-                            value = this.records[i];
-                            done = i >= this.records.length;
+                            value = _this.records[i];
+                            done = i >= _this.records.length;
                             i += 1;
-
                             if (
                                 !done &&
                                 range !== undefined &&
                                 range.upper !== undefined
                             ) {
-                                const cmpResult = cmp(value.key, range.upper);
+                                var cmpResult = cmp_1.default(
+                                    value.key,
+                                    range.upper,
+                                );
                                 done =
                                     cmpResult === 1 ||
                                     (cmpResult === 0 && range.upperOpen);
@@ -169,16 +162,18 @@ class RecordStore {
                                 }
                             }
                         } else {
-                            value = this.records[i];
+                            value = _this.records[i];
                             done = i < 0;
                             i -= 1;
-
                             if (
                                 !done &&
                                 range !== undefined &&
                                 range.lower !== undefined
                             ) {
-                                const cmpResult = cmp(value.key, range.lower);
+                                var cmpResult = cmp_1.default(
+                                    value.key,
+                                    range.lower,
+                                );
                                 done =
                                     cmpResult === -1 ||
                                     (cmpResult === 0 && range.lowerOpen);
@@ -187,24 +182,23 @@ class RecordStore {
                                 }
                             }
                         }
-
                         // The weird "as IteratorResult<Record>" is needed because of
                         // https://github.com/Microsoft/TypeScript/issues/11375 and
                         // https://github.com/Microsoft/TypeScript/issues/2983
                         // tslint:disable-next-line no-object-literal-type-assertion
                         return {
-                            done,
-                            value,
-                        } as IteratorResult<Record>;
+                            done: done,
+                            value: value,
+                        };
                     },
                 };
-            },
-        };
-    }
-
-    private saveRecords(): void {
+            }),
+            _a
+        );
+    };
+    RecordStore.prototype.saveRecords = function() {
         fs.writeFileSync(this.tempDatabase, JSON.stringify(this.records));
-    }
-}
-
-export default RecordStore;
+    };
+    return RecordStore;
+})();
+exports.default = RecordStore;

@@ -1,14 +1,14 @@
 {
     "name": "fake-indexeddb",
     "version": "3.1.7",
-    "description": "Fake IndexedDB: a pure JS in-memory implementation of the IndexedDB API",
-    "homepage": "https://github.com/dumbmatter/fakeIndexedDB",
+    "description": "Fake IndexedDB: a pure JS persistent implementation of the IndexedDB API",
+    "homepage": "https://github.com/abbaseya/fakeIndexedDB",
     "repository": {
         "type": "git",
-        "url": "git://github.com/dumbmatter/fakeIndexedDB.git"
+        "url": "git+https://github.com:abbaseya/fakeIndexedDB.git"
     },
     "bugs": {
-        "url": "https://github.com/dumbmatter/fakeIndexedDB/issues"
+        "url": "https://github.com/abbaseya/fakeIndexedDB/issues"
     },
     "keywords": [
         "indexeddb",
@@ -16,7 +16,7 @@
         "database",
         "embedded",
         "nosql",
-        "in-memory",
+        "persistent",
         "polyfill",
         "shim"
     ],
@@ -32,7 +32,7 @@
         "test-w3c": "node src/test/web-platform-tests/run-all.js",
         "test": "npm run lint && npm run build && node test/test.js && npm run test-w3c && npm run test-mocha && npm run test-qunit"
     },
-    "author": "Jeremy Scheff <jdscheff@gmail.com> (http://dumbmatter.com/)",
+    "author": "Ahmed Abbas <me@abbas.guru> (https://abbas.gutu/)",
     "license": "Apache-2.0",
     "files": [
         "auto.js",
